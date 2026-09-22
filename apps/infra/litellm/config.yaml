@@ -1,0 +1,326 @@
+# ============================================================
+# LiteLLM Proxy - AstroQuest City
+# Multi-providers . Free-first . Fallback cascade
+#
+# MODELES DISPONIBLES SUR CHAQUE PROVIDER (septembre 2026) :
+#
+# === GROQ (free tier, 30 RPM / ~8K TPM par cle) ===
+# | Modele                              | ID                              | Context  | RPM  | TPM  | TPD    | Prix/1M in  | Prix/1M out |
+# |-------------------------------------|----------------------------------|----------|------|------|--------|-------------|-------------|
+# | GPT OSS 120B   *** NOTRE TIER 4 *** | openai/gpt-oss-120b             | 131 072  | 30   | 8K   | 200K   | $0.15       | $0.60       |
+# | GPT OSS 20B    *** NOTRE TIER 3 *** | openai/gpt-oss-20b              | 131 072  | 30   | 8K   | 200K   | $0.075      | $0.30       |
+# | GPT OSS Safeguard 20B               | openai/gpt-oss-safeguard-20b    | 131 072  | 30   | 8K   | 200K   | $0.075      | $0.30       |
+# | Llama 3.1 8B Instant                | llama-3.1-8b-instant            | 131 072  | 30   | 6K   | 500K   | $0.05       | $0.08       |
+# | Llama 3.3 70B (payant requis)       | llama-3.3-70b-versatile          | 131 072  | 30   | 12K  | 100K   | $0.59       | $0.79       |
+# | Llama 4 Scout 17Bx16E               | meta-llama/llama-4-scout-17b..  | 131 072  | 30   | 30K  | 500K   | $0.11       | $0.34       |
+# | Qwen 3.8 27B                        | qwen/qwen3.8-27b                | 131 042  | 30   | 8K   | 200K   | $0.80       | $4.00       |
+# | Qwen 3.6 27B                        | qwen/qwen3.6-27b                | 131 072  | 30   | 8K   | 200K   | $0.60       | $3.00       |
+# | Kimi K2                             | moonshotai/kimi-k2-instruct-... | 262 144  | 60   | 10K  | 300K   | $1.00       | $3.00       |
+#
+# === GROQ DECOMMISSIONNES (ne plus utiliser) ===
+# - groq/compound          (21/09/2026)
+# - groq/compound-mini     (21/09/2026)
+#
+# === MINIMAX (Token Plan, Code Plan) ===
+# | Modele                       | Context   | Speed   | Description                           |
+# |------------------------------|-----------|---------|---------------------------------------|
+# | MiniMax-M3  *** NOTRE TIER 7 *** | 1 000 000 | 100+ TPS | Latest, agentic, coding, long-context |
+# | MiniMax-M2.7  *** NOTRE TIER 6 ***| 204 800 | 60 TPS   | Recursive self-improvement            |
+# | MiniMax-M2.7-highspeed      | 204 800   | 100 TPS  | M2.7 plus rapide                      |
+# | MiniMax-M2.5                | 204 800   | 60 TPS   | Generation precedente                 |
+# | MiniMax-M2.5-highspeed      | 204 800   | 100 TPS  | M2.5 plus rapide                      |
+#
+# Endpoint API : https://api.minimax.io/v1
+# Format LiteLLM : minimax/MiniMax-M3  (PAS openai/MiniMax-M3)
+#
+# === AJOUTER UN PROVIDER (provider-template) ===
+# 1. Ajouter la cle dans .env :
+#      powershell -File apps\infra\scripts\set-secret.ps1 -Key GEMINI_API_KEY -Value "AIza..."
+# 2. Ajouter le bloc modele ci-dessous (commenter/decommenter + adapter)
+# 3. Redeployer LiteLLM :
+#      ssh root@46.224.170.108 'cd /opt/aq-app/infra && docker compose restart litellm'
+# ============================================================
+
+model_list:
+
+  # ============================================================
+  # TIER 7 - CONSTRUCTEUR LOURD : MiniMax-M3 (Token Plan)
+  # 1M tokens context, agentic reasoning, coding
+  # Quota : partage Token Plan (Plus ~4.5K calls/5h, Max ~15K calls/5h)
+  # ============================================================
+  - model_name: "tier-7-constructeur"
+    litellm_params:
+      model: minimax/MiniMax-M3
+      api_key: os.environ/MINIMAX_API_KEY
+      api_base: https://api.minimax.io/v1
+      max_tokens: 8192
+
+  # ============================================================
+  # TIER 7-FAST : MiniMax-M3 + reasoning_effort minimal
+  # Pour prompts courts : economise tokens (reasoning minimal).
+  # Objectif : < 1000ms / < 80 tokens pour "Reponds OK"
+  # ============================================================
+  - model_name: "tier-7-fast"
+    litellm_params:
+      model: minimax/MiniMax-M3
+      api_key: os.environ/MINIMAX_API_KEY
+      api_base: https://api.minimax.io/v1
+      max_tokens: 1024
+      extra_body:
+        reasoning_effort: minimal
+
+  # ============================================================
+  # TIER 6-FAST : MiniMax-M2.7 + reasoning_effort low
+  # Compromis : plus rapide que tier-6, meilleur que tier-7-fast pour qualite.
+  # ============================================================
+  - model_name: "tier-6-fast"
+    litellm_params:
+      model: minimax/MiniMax-M2.7
+      api_key: os.environ/MINIMAX_API_KEY
+      api_base: https://api.minimax.io/v1
+      max_tokens: 2048
+      extra_body:
+        reasoning_effort: low
+
+  # ============================================================
+  # TIER 6 - OUVRIER RAPIDE : MiniMax-M2.7 (Token Plan)
+  # 200K context, equilibre vitesse/qualite
+  # Quota : partage Token Plan avec M3
+  # ============================================================
+  - model_name: "tier-6-ouvrier"
+    litellm_params:
+      model: minimax/MiniMax-M2.7
+      api_key: os.environ/MINIMAX_API_KEY
+      api_base: https://api.minimax.io/v1
+      max_tokens: 4096
+
+  # ============================================================
+  # TIER 4 - MICRO-WORKER POOL : 21x Groq gpt-oss-120b
+  # Round-robin sur 21 cles (volume total : 21 x 30 RPM = 630 RPM)
+  # Context 131K, prompt caching 50% off
+  # ============================================================
+  - model_name: "tier-4-groq"
+    litellm_params:
+      model: groq/openai/gpt-oss-120b
+      api_key: os.environ/GROQ_KEY_01
+      rpm: 30
+      max_tokens: 4096
+  - model_name: "tier-4-groq"
+    litellm_params:
+      model: groq/openai/gpt-oss-120b
+      api_key: os.environ/GROQ_KEY_02
+      rpm: 30
+      max_tokens: 4096
+  - model_name: "tier-4-groq"
+    litellm_params:
+      model: groq/openai/gpt-oss-120b
+      api_key: os.environ/GROQ_KEY_03
+      rpm: 30
+      max_tokens: 4096
+  - model_name: "tier-4-groq"
+    litellm_params:
+      model: groq/openai/gpt-oss-120b
+      api_key: os.environ/GROQ_KEY_04
+      rpm: 30
+      max_tokens: 4096
+  - model_name: "tier-4-groq"
+    litellm_params:
+      model: groq/openai/gpt-oss-120b
+      api_key: os.environ/GROQ_KEY_05
+      rpm: 30
+      max_tokens: 4096
+  - model_name: "tier-4-groq"
+    litellm_params:
+      model: groq/openai/gpt-oss-120b
+      api_key: os.environ/GROQ_KEY_06
+      rpm: 30
+      max_tokens: 4096
+  - model_name: "tier-4-groq"
+    litellm_params:
+      model: groq/openai/gpt-oss-120b
+      api_key: os.environ/GROQ_KEY_07
+      rpm: 30
+      max_tokens: 4096
+  - model_name: "tier-4-groq"
+    litellm_params:
+      model: groq/openai/gpt-oss-120b
+      api_key: os.environ/GROQ_KEY_08
+      rpm: 30
+      max_tokens: 4096
+  - model_name: "tier-4-groq"
+    litellm_params:
+      model: groq/openai/gpt-oss-120b
+      api_key: os.environ/GROQ_KEY_09
+      rpm: 30
+      max_tokens: 4096
+  - model_name: "tier-4-groq"
+    litellm_params:
+      model: groq/openai/gpt-oss-120b
+      api_key: os.environ/GROQ_KEY_10
+      rpm: 30
+      max_tokens: 4096
+  - model_name: "tier-4-groq"
+    litellm_params:
+      model: groq/openai/gpt-oss-120b
+      api_key: os.environ/GROQ_KEY_11
+      rpm: 30
+      max_tokens: 4096
+  - model_name: "tier-4-groq"
+    litellm_params:
+      model: groq/openai/gpt-oss-120b
+      api_key: os.environ/GROQ_KEY_12
+      rpm: 30
+      max_tokens: 4096
+  - model_name: "tier-4-groq"
+    litellm_params:
+      model: groq/openai/gpt-oss-120b
+      api_key: os.environ/GROQ_KEY_13
+      rpm: 30
+      max_tokens: 4096
+  - model_name: "tier-4-groq"
+    litellm_params:
+      model: groq/openai/gpt-oss-120b
+      api_key: os.environ/GROQ_KEY_14
+      rpm: 30
+      max_tokens: 4096
+  - model_name: "tier-4-groq"
+    litellm_params:
+      model: groq/openai/gpt-oss-120b
+      api_key: os.environ/GROQ_KEY_15
+      rpm: 30
+      max_tokens: 4096
+  - model_name: "tier-4-groq"
+    litellm_params:
+      model: groq/openai/gpt-oss-120b
+      api_key: os.environ/GROQ_KEY_16
+      rpm: 30
+      max_tokens: 4096
+  - model_name: "tier-4-groq"
+    litellm_params:
+      model: groq/openai/gpt-oss-120b
+      api_key: os.environ/GROQ_KEY_17
+      rpm: 30
+      max_tokens: 4096
+  - model_name: "tier-4-groq"
+    litellm_params:
+      model: groq/openai/gpt-oss-120b
+      api_key: os.environ/GROQ_KEY_18
+      rpm: 30
+      max_tokens: 4096
+  - model_name: "tier-4-groq"
+    litellm_params:
+      model: groq/openai/gpt-oss-120b
+      api_key: os.environ/GROQ_KEY_19
+      rpm: 30
+      max_tokens: 4096
+  - model_name: "tier-4-groq"
+    litellm_params:
+      model: groq/openai/gpt-oss-120b
+      api_key: os.environ/GROQ_KEY_20
+      rpm: 30
+      max_tokens: 4096
+  - model_name: "tier-4-groq"
+    litellm_params:
+      model: groq/openai/gpt-oss-120b
+      api_key: os.environ/GROQ_KEY_21
+      rpm: 30
+      max_tokens: 4096
+  # FIN POOL GROQ -- fin du bloc automatiquement edite
+
+  # ============================================================
+  # TIER 3 - FORMATEUR RAPIDE : Groq gpt-oss-20b
+  # 1,000 TPS (le plus rapide), ideal pour linting/JSON sanitize
+  # ============================================================
+  - model_name: "tier-3-formatteur"
+    litellm_params:
+      model: groq/openai/gpt-oss-20b
+      api_key: os.environ/GROQ_KEY_01
+      rpm: 30
+      max_tokens: 2048
+
+  # ============================================================
+  # TIER 5 - QA MISTRAL (optionnel, desactiver si pas de cle)
+  # Mistral Large 2 (123B), contexte 128K
+  # Free : Experiment plan ~1B tokens/mois (opt-in data training)
+  # ============================================================
+  # - model_name: "tier-5-qa"
+  #   litellm_params:
+  #     model: mistral/mistral-large-latest
+  #     api_key: os.environ/MISTRAL_API_KEY
+  #     rpm: 20
+  #     max_tokens: 4096
+
+  # ============================================================
+  # TIER 8 - CLAUDE SONNET (Phase 2 : ajouter ANTHROPIC_API_KEY)
+  # ============================================================
+  # - model_name: "tier-8-urbaniste"
+  #   litellm_params:
+  #     model: anthropic/claude-sonnet-4-5
+  #     api_key: os.environ/ANTHROPIC_API_KEY
+  #     rpm: 20
+  #     max_tokens: 8192
+
+  # ============================================================
+  # TIER 9 - CLAUDE OPUS (Phase 2)
+  # ============================================================
+  # - model_name: "tier-9-architecte"
+  #   litellm_params:
+  #     model: anthropic/claude-opus-4-7
+  #     api_key: os.environ/ANTHROPIC_API_KEY
+  #     rpm: 10
+  #     max_tokens: 8192
+
+  # ============================================================
+  # TIER 9 ALT - GEMINI PRO (Phase 2 : ajouter GEMINI_API_KEY)
+  # 2M context, multimodal (image/vidéo)
+  # ============================================================
+  # - model_name: "tier-9-gemini"
+  #   litellm_params:
+  #     model: gemini/gemini-2.5-pro
+  #     api_key: os.environ/GEMINI_API_KEY
+  #     rpm: 10
+  #     max_tokens: 8192
+
+# ============================================================
+# ROUTING STRATEGY
+# ============================================================
+router_settings:
+  routing_strategy: simple-shuffle
+  num_retries: 2
+  timeout: 30
+  allowed_fails: 3
+  cooldown_time: 60
+  disable_spend_logs: false
+
+# ============================================================
+# FALLBACK CHAINS
+# Tier 7 (M3) -> Tier 6 (M2.7) -> Tier 4 (21x Groq)
+# Tier 6 (M2.7) -> Tier 4 (Groq)
+# Tier 4 (Groq) -> Tier 3 (gpt-oss-20b) -> Tier 4 (autre cle)
+# ============================================================
+litellm_settings:
+  drop_params: true
+  fallbacks:
+    - tier-7-constructeur: [tier-6-ouvrier, tier-4-groq]
+    - tier-6-ouvrier:      [tier-4-groq]
+    - tier-4-groq:         [tier-3-formatteur]
+    - tier-3-formatteur:   [tier-4-groq]
+  context_window_fallbacks:
+    - tier-7-constructeur: [tier-4-groq]
+  telemetry: false
+
+# ============================================================
+# GENERAL SETTINGS
+# ============================================================
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: os.environ/DATABASE_URL
+  store_model_in_db: true
+  proxy_batch_write_at: 5
+  enforce_user_param: false
+
+# ============================================================
+# UI DASHBOARD
+# ============================================================
+ui:
+  litellm_dashboard: true

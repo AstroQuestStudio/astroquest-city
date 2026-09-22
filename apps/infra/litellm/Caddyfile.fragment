@@ -1,0 +1,27 @@
+# ============================================================
+# Fragment Caddy à ajouter au /etc/caddy/Caddyfile existant
+# Routes pour LiteLLM (sous edge.astroquest.fr)
+# ============================================================
+
+# LiteLLM — API OpenAI-compatible sur /litellm/*
+handle /litellm/* {
+    uri strip_prefix /litellm
+    reverse_proxy 127.0.0.1:4000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        transport http {
+            response_header_timeout 60s
+            read_timeout 60s
+            dial_timeout 10s
+        }
+    }
+}
+
+# CORS permissive pour les appels API depuis l'app Tauri (dev)
+@cors_preflight method OPTIONS
+handle @cors_preflight {
+    header Access-Control-Allow-Origin "*"
+    header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    header Access-Control-Allow-Headers "Authorization, Content-Type"
+    header Access-Control-Max-Age "3600"
+    respond "" 204
