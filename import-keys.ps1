@@ -1,7 +1,8 @@
-# Import Groq + MiniMax + Gemini keys from local files to ~/.aq/keys.json
-$keysTxt = "C:\Users\trufa\Downloads\keys.txt"
+# Import Groq + MiniMax + Gemini + NVIDIA keys from local files to ~/.aq/keys.json
+$keysTxt  = "C:\Users\trufa\Downloads\keys.txt"
 $minimaxTxt = "C:\Users\trufa\Documents\AstroQuest City\minimaxtokenplanapikey.txt"
 $geminiTxt = "C:\Users\trufa\Downloads\gemini api keys.txt"
+$nvidiaTxt = "C:\Users\trufa\Downloads\nvidia api keys.txt"
 $keysJson = "$env:USERPROFILE\.aq\keys.json"
 
 # Parse Groq keys (format: "groq N : gsk_xxx")
@@ -18,7 +19,7 @@ Write-Host "Found $($groqKeys.Count) Groq keys"
 $minimaxKey = $null
 if (Test-Path $minimaxTxt) {
   $minimaxKey = (Get-Content $minimaxTxt -First 1).Trim()
-  Write-Host "MiniMax key: $($minimaxKey.Substring(0,15))..."
+  if ($minimaxKey) { Write-Host "MiniMax key: $($minimaxKey.Substring(0,15))..." }
 }
 
 # Parse Gemini keys (look for lines starting with "AQ.")
@@ -31,11 +32,27 @@ foreach ($line in $geminiLines) {
 }
 Write-Host "Found $($geminiKeys.Count) Gemini keys"
 
+# Parse NVIDIA keys (format: nvapi-...)
+$nvidiaKeys = @()
+if (Test-Path $nvidiaTxt) {
+  $nvidiaLines = Get-Content $nvidiaTxt -ErrorAction SilentlyContinue
+  foreach ($line in $nvidiaLines) {
+    $trim = $line.Trim()
+    if ($trim -match '^(nvapi-[A-Za-z0-9_-]{20,})$') {
+      $nvidiaKeys += $matches[1]
+    } elseif ($trim -match 'nvapi-[A-Za-z0-9_-]{20,}') {
+      $nvidiaKeys += $matches[0]
+    }
+  }
+}
+Write-Host "Found $($nvidiaKeys.Count) NVIDIA keys"
+
 # Build JSON
 $json = @{
   groq_keys = $groqKeys
   minimax_key = $minimaxKey
   gemini_keys = $geminiKeys
+  nvidia_keys = $nvidiaKeys
   litellm_master_key = "sk-aq-local"
   anthropic_key = $null
   openai_key = $null
@@ -51,11 +68,11 @@ try { icacls $keysJson /inheritance:r /grant:r "$env:USERNAME:(R,W)" 2>$null | O
 Write-Host ""
 Write-Host "=== KEYS SAVED ==="
 Write-Host "Path: $keysJson"
-Write-Host "Groq keys: $($groqKeys.Count)"
-Write-Host "MiniMax: $(if ($minimaxKey) { 'YES' } else { 'NO' })"
-Write-Host "Gemini keys: $($geminiKeys.Count)"
+Write-Host "Groq keys:    $($groqKeys.Count)"
+Write-Host "MiniMax:      $(if ($minimaxKey) { 'YES' } else { 'NO' })"
+Write-Host "Gemini keys:  $($geminiKeys.Count)"
+Write-Host "NVIDIA keys:  $($nvidiaKeys.Count)"
 Write-Host ""
-Write-Host "Sample Groq key: $($groqKeys[0].Substring(0,12))..."
-if ($geminiKeys.Count -gt 0) {
-  Write-Host "Sample Gemini key: $($geminiKeys[0].Substring(0,12))..."
-}
+if ($groqKeys.Count -gt 0)    { Write-Host "Sample Groq:    $($groqKeys[0].Substring(0,12))..." }
+if ($geminiKeys.Count -gt 0)  { Write-Host "Sample Gemini:  $($geminiKeys[0].Substring(0,12))..." }
+if ($nvidiaKeys.Count -gt 0)  { Write-Host "Sample NVIDIA:  $($nvidiaKeys[0].Substring(0,12))..." }
