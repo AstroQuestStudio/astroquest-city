@@ -1,0 +1,21 @@
+{
+  "name": "aq-mcp-server",
+  "version": "0.1.0",
+  "description": "AstroQuest City MCP server — JSON-RPC 2.0 over HTTP exposing cortex + git + task tools to Cline / Claude Code / OpenHands",
+  "type": "module",
+  "scripts": {
+    "start": "bun src/server.ts",
+    "dev": "bun --watch src/server.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "@types/node": "^26.6.2",
+    "express": "^4.22.3",
+    "ts-node": "^10.9.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "bun-types": "latest",
+    "typescript": "^5.9.3"
+  }
+}
