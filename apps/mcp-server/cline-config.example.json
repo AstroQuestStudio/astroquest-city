@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "_comment": "Drop this into Cline's MCP config (~/.cline/mcp_config.json or via Cline UI > MCP Servers > Add Server). AstroQuest City MCP server must be running on port 6789.",
+  "mcpServers": {
+    "astroquest-city": {
+      "url": "http://127.0.0.1:6789/mcp",
+      "transport": "http",
+      "description": "AstroQuest City — task queue, auto-router, git worktrees, Cortex RAG",
+      "capabilities": ["tools"]
+    }
+  },
+  "_provider_config": {
+    "_comment": "Cline's API provider config (set in Cline UI > API Provider). This shows the OpenAI-compatible endpoint you'd point Cline at to use your AQ providers instead of OpenAI/Anthropic directly.",
+    "baseUrl": "http://127.0.0.1:4000/v1",
+    "apiKey": "sk-aq-local",
+    "model": "auto",
+    "_comment_2": "Cline passes 'model': 'auto' on every call. Our Smart Tier Auto-Router picks the right tier based on the prompt content + length."
+  }
+}
