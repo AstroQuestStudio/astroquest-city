@@ -32,16 +32,9 @@ if (-not (Test-Path $userBin)) {
 }
 
 # 3. Hard-link all aq.* scripts into the bin directory
-$scriptsToLink = @(
-    "aq.cmd",
-    "aq-coder.ps1",
-    "aq-repl.ps1",
-    "aq-run-task.ps1",
-    "aq-tiers.ps1",
-    "aq-compact.ps1",
-    "aq-mcp.ps1",
-    "aq-doctor.ps1"
-)
+# (auto-discover any new aq-*.ps1 helpers added later)
+$scriptsToLink = Get-ChildItem -Path $aqRoot -Filter "aq*.ps1" -File | ForEach-Object { $_.Name }
+$scriptsToLink = @("aq.cmd") + $scriptsToLink | Sort-Object -Unique
 foreach ($script in $scriptsToLink) {
     $src = Join-Path $aqRoot $script
     if (-not (Test-Path $src)) { continue }
