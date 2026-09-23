@@ -1,13 +1,13 @@
-#requires -Version 5
+﻿#requires -Version 5
 <#
 .SYNOPSIS
-    aq-coder — calls the local AQ proxy to generate code via free providers (Groq, NVIDIA, Gemini)
+    aq-coder â€” calls the local AQ proxy to generate code via free providers (Groq, NVIDIA, Gemini)
     instead of burning the user's MiniMax plan. Designed for Mavis self-coding tasks.
 
 .DESCRIPTION
     Wraps `POST http://127.0.0.1:4000/v1/chat/completions` (the AQ local proxy) with sensible
     defaults for code generation:
-      - Default tier: tier-6-ouvrier (Mistral Nemotron — agentic, free)
+      - Default tier: tier-6-ouvrier (Mistral Nemotron â€” agentic, free)
       - Smart tier override: tier-8-opus-reflection for long/strategic prompts
       - Reads API key from ~/.aq/keys.json (or env $AQ_MASTER_KEY, default "sk-aq-local")
       - Falls back through the tier chain automatically (handled by the proxy)

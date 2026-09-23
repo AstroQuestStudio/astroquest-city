@@ -1,7 +1,7 @@
-#requires -Version 5
+﻿#requires -Version 5
 <#
 .SYNOPSIS
-    aq run "task description" — spawns a task in a fresh git worktree + agent run.
+    aq run "task description" â€” spawns a task in a fresh git worktree + agent run.
     Like `git worktree add` but combined with our task tracking.
 #>
 

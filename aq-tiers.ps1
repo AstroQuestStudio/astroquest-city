@@ -1,7 +1,7 @@
-#requires -Version 5
+﻿#requires -Version 5
 <#
 .SYNOPSIS
-    aq tiers — pretty-print all available model tiers with fallback chains.
+    aq tiers â€” pretty-print all available model tiers with fallback chains.
 #>
 
 $proxy = "http://127.0.0.1:4000"

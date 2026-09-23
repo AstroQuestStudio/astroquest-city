@@ -199,7 +199,7 @@ exit /b %ERRORLEVEL%
 :route
 set "PROMPT=%~2"
 if "%PROMPT%"=="" (
-    echo Usage: aq route "your prompt"   (debug: see which tier would be picked)
+    echo Usage: aq route "your prompt" -- debug: see which tier would be picked
     exit /b 1
 )
 curl -s -X POST "%PROXY%/v1/auto/route" -H "Authorization: Bearer %AUTH%" -H "Content-Type: application/json" -d "{\"messages\":[{\"role\":\"user\",\"content\":\"%PROMPT%\"}]}"

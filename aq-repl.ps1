@@ -1,7 +1,7 @@
 #requires -Version 5
 <#
 .SYNOPSIS
-    aq-repl — interactive REPL that proxies every line to the AQ Smart Tier Auto-Router.
+    aq-repl -- interactive REPL that proxies every line to the AQ Smart Tier Auto-Router.
     Same UX as typing in the Tauri UI but in your terminal.
 
 .EXAMPLE
@@ -16,7 +16,7 @@ $historyPath = "$env:USERPROFILE\.aq\repl_history.txt"
 # Ensure ~/.aq exists
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.aq" | Out-Null
 
-Write-Host "AQ REPL — type your prompts, 'exit' to quit, ':tier tier-name' to override, ':clear' to reset history." -ForegroundColor Cyan
+Write-Host "AQ REPL -- type your prompts, 'exit' to quit, ':tier tier-name' to override, ':clear' to reset history." -ForegroundColor Cyan
 Write-Host "Connected to $proxy" -ForegroundColor DarkGray
 Write-Host ""
 
@@ -79,6 +79,7 @@ if (Test-Path $historyPath) {
 
 while ($true) {
     $line = Read-Host "you"
+    if ($null -eq $line) { break }   # EOF (stdin closed)
     $line = $line.Trim()
     if ([string]::IsNullOrWhiteSpace($line)) { continue }
     if ($line -eq "exit" -or $line -eq "quit") { break }

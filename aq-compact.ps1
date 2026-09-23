@@ -1,7 +1,7 @@
-#requires -Version 5
+﻿#requires -Version 5
 <#
 .SYNOPSIS
-    aq compact — manually invoke context compaction endpoint.
+    aq compact â€” manually invoke context compaction endpoint.
     Useful before running a long task to summarize old context.
 #>
 
@@ -13,7 +13,7 @@ Write-Host ""
 Write-Host "  POST $proxy/v1/compact" -ForegroundColor DarkGray
 Write-Host "  Body: { messages: [...], keep_last: 5 }" -ForegroundColor DarkGray
 Write-Host ""
-Write-Host "Or use it from aq chat — it auto-compacts when context exceeds threshold." -ForegroundColor DarkGray
+Write-Host "Or use it from aq chat â€” it auto-compacts when context exceeds threshold." -ForegroundColor DarkGray
 Write-Host ""
 Write-Host "Live test:" -ForegroundColor Cyan
 $body = @{

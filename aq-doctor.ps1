@@ -1,7 +1,7 @@
-#requires -Version 5
+﻿#requires -Version 5
 <#
 .SYNOPSIS
-    aq doctor / status — health check for AQ City components.
+    aq doctor / status â€” health check for AQ City components.
 #>
 
 param([switch]$Quick)

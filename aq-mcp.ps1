@@ -1,7 +1,7 @@
-#requires -Version 5
+﻿#requires -Version 5
 <#
 .SYNOPSIS
-    aq mcp start|stop|status|tools — manage the MCP server.
+    aq mcp start|stop|status|tools â€” manage the MCP server.
 #>
 
 param(
@@ -27,9 +27,9 @@ switch ($Action) {
             Start-Sleep -Seconds 3
             $check = Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | Where-Object { $_.LocalPort -eq $port }
             if ($check) {
-                Write-Host "OK — MCP server up on http://127.0.0.1:$port" -ForegroundColor Green
+                Write-Host "OK â€” MCP server up on http://127.0.0.1:$port" -ForegroundColor Green
             } else {
-                Write-Host "Failed to start — check logs" -ForegroundColor Red
+                Write-Host "Failed to start â€” check logs" -ForegroundColor Red
             }
         } finally {
             Pop-Location
@@ -67,7 +67,7 @@ switch ($Action) {
             $j = $r.Content | ConvertFrom-Json
             Write-Host "MCP tools ($($j.tools.Count)):" -ForegroundColor Cyan
             foreach ($t in $j.tools) {
-                Write-Host "  $($t.name) — $($t.description)" -ForegroundColor White
+                Write-Host "  $($t.name) â€” $($t.description)" -ForegroundColor White
             }
         } catch {
             Write-Host "FAIL: $($_.Exception.Message)" -ForegroundColor Red
