@@ -50,6 +50,8 @@ if /I "%~1"=="stats"    goto :stats
 if /I "%~1"=="doctor"   goto :doctor
 if /I "%~1"=="tui"      goto :tui
 if /I "%~1"=="status"   goto :status
+if /I "%~1"=="code"     goto :code
+if /I "%~1"=="oc"       goto :oc
 
 REM === Default: one-shot chat ===
 REM Strip surrounding quotes from %* (cmd includes them)
@@ -256,4 +258,16 @@ exit /b %ERRORLEVEL%
 
 :tui
 "%PS%" -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%aq-tui.ps1"
+exit /b %ERRORLEVEL%
+
+:code
+REM aq code "task" -- delegates to opencode run for full coding agent
+REM (file edits, tools, LSP, multi-turn) using opencode as the engine
+REM Optional flags: --agent build|plan|ceo, --model <id>
+"%PS%" -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%aq-code.ps1" %2 %3 %4 %5 %6 %7 %8 %9
+exit /b %ERRORLEVEL%
+
+:oc
+REM aq oc <args> -- passthrough to opencode CLI
+"C:\Users\trufa\.opencode\bin\opencode.exe" %*
 exit /b %ERRORLEVEL%
