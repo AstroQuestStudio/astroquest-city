@@ -1,0 +1,22 @@
+{
+  "name": "ao-relay",
+  "version": "0.1.0",
+  "description": "AstroQuest City Cloudflare Worker relay — multi-IP rotation for LLM providers",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "tail": "wrangler tail",
+    "secret:groq": "wrangler secret put GROQ_KEYS_JSON",
+    "secret:gemini": "wrangler secret put GEMINI_KEYS_JSON",
+    "secret:nvidia": "wrangler secret put NVIDIA_KEYS_JSON",
+    "secret:minimax": "wrangler secret put MINIMAX_KEY",
+    "secret:auth": "wrangler secret put RELAY_AUTH_TOKEN"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240909.0",
+    "wrangler": "^3.78.0",
+    "typescript": "^5.6.0"
+  }
+}

@@ -1,0 +1,30 @@
+name = "ao-relay"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+# === Observability ===
+[observability]
+enabled = true
+
+# ============================================================
+# Secrets (set with `wrangler secret put <NAME>`)
+#  - GROQ_KEYS_JSON: array of "gsk_..." strings, JSON-encoded
+#  - GEMINI_KEYS_JSON: array of "AQ.Ab..." strings, JSON-encoded
+#  - NVIDIA_KEYS_JSON: array of "nvapi-..." strings, JSON-encoded
+#  - MINIMAX_KEY: single "sk-cp-..." string
+#  - RELAY_AUTH_TOKEN: bearer token to gate the relay (matches local_proxy auth)
+# ============================================================
+
+# KV for per-IP request logs and circuit-breaker state
+# [[kv_namespaces]]
+# binding = "AO_RELAY_KV"
+# id = "<create with: wrangler kv:namespace create AO_RELAY_KV>"
+
+[vars]
+RELAY_VERSION = "0.1.0"
+DEFAULT_REGION = "weur"  # Western Europe, change per your VPS
+
+# Limits
+MAX_RETRIES_PER_TIER = 6
+LOG_VERBOSE = false
