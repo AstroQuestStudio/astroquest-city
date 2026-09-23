@@ -35,6 +35,7 @@ if "%~1"=="--help" goto :help
 if "%~1"=="-h" goto :help
 if "%~1"=="--version" goto :version
 if "%~1"=="-V" goto :version
+if "%~1"==""        goto :tui
 
 REM === Subcommands ===
 if /I "%~1"=="chat"     goto :chat
@@ -80,17 +81,21 @@ exit /b 0
 echo aq - AstroQuest City CLI (opencode-style)
 echo.
 echo Usage:
+echo   aq (no args)                      Launch opencode TUI (default)
 echo   aq "your prompt"                  One-shot chat via Smart Tier Auto-Router
+echo   aq code "task"  [--agent build]   Full coding agent via opencode run
+echo                                      (file edits, tools, LSP, multi-turn)
 echo   aq chat                           Interactive REPL with persistent history
-echo   aq run "task description"         Spawn an isolated git worktree + agent task
+echo   aq run "task description"         Spawn worktree + AQ proxy task
 echo   aq tasks [list^|create^|delete]    Manage the task queue
 echo   aq worktrees [list^|create^|remove] Manage git worktrees
-echo   aq tiers                          List all available model tiers + fallback chains
-echo   aq route "prompt"                 Debug: show which tier would be chosen
+echo   aq tiers                          List 22 model tiers + fallback chains
+echo   aq route "prompt"                 Debug: see which tier would be chosen
 echo   aq compact "prompt"               Force context compaction (summarize history)
-echo   aq mcp start^|stop                Manage the MCP server
+echo   aq mcp start^|stop                Manage the MCP server (11 tools)
 echo   aq stats                          Show task + provider stats
 echo   aq doctor                         Run health checks (proxy, MCP, opencode)
+echo   aq oc ^<args^>                      Passthrough to opencode CLI
 echo   aq status                         Show running processes + ports
 echo.
 echo Examples:
